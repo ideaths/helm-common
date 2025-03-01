@@ -1,23 +1,20 @@
-# templates/common/hpa.tpl
-{{- if .Values.hpa.enabled }}
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
+{{- define "common.configmap.tpl" -}}
+{{- if and .Values.configmap.create .Values.configmap.serverConfigFiles }}
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: {{ include "yourchart.fullname" . }}-hpa
+  name: {{ include "common.fullname" . }}-config
   labels:
-    {{- include "yourchart.labels" . | nindent 4 }}
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: {{ include "yourchart.fullname" . }}
-  minReplicas: {{ .Values.hpa.minReplicas }}
-  maxReplicas: {{ .Values.hpa.maxReplicas }}
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: {{ .Values.hpa.targetCPUUtilizationPercentage }}
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  {{- range $key, $file := .Values.configmap.serverConfigFiles }}
+  {{ $key }}: |
+    {{- (.Files.Get $file) | nindent 4 }}
+  {{- end }}
+  {{- if .Values.configmap.vars }}
+  {{- range $key, $value := .Values.configmap.vars }}
+  {{ $key }}: "{{ $value }}"
+  {{- end }}
+  {{- end }}
 {{- end }}
+{{- end -}}
