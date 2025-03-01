@@ -1,13 +1,13 @@
-# templates/istio/destinationRule.tpl
+{{- define "common.istio.destinationRule.tpl" -}}
 {{- if .Values.istio.destinationRule.enabled }}
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: {{ include "yourchart.fullname" . }}-destinationrule
+  name: {{ include "common.fullname" . }}-destinationrule
   labels:
-    {{- include "yourchart.labels" . | nindent 4 }}
+    {{- include "common.labels" . | nindent 4 }}
 spec:
-  host: {{ include "yourchart.fullname" . }}
+  host: {{ include "common.fullname" . }}
   trafficPolicy:
     loadBalancer:
       simple: ROUND_ROBIN
@@ -23,3 +23,4 @@ spec:
       baseEjectionTime: {{ .Values.istio.destinationRule.trafficPolicy.outlierDetection.baseEjectionTime }}
       maxEjectionPercent: {{ .Values.istio.destinationRule.trafficPolicy.outlierDetection.maxEjectionPercent }}
 {{- end }}
+{{- end -}}
