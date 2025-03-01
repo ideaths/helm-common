@@ -1,10 +1,11 @@
+{{- define "common.configmap.tpl" -}}
 {{- if and .Values.configmap.create .Values.configmap.serverConfigFiles }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "yourchart.fullname" . }}-config
+  name: {{ include "common.fullname" . }}-config
   labels:
-    {{- include "yourchart.labels" . | nindent 4 }}
+    {{- include "common.labels" . | nindent 4 }}
 data:
   {{- range $key, $file := .Values.configmap.serverConfigFiles }}
   {{ $key }}: |
@@ -16,3 +17,4 @@ data:
   {{- end }}
   {{- end }}
 {{- end }}
+{{- end -}}
