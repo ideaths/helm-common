@@ -34,7 +34,7 @@ service:
 
 # ConfigMap settings
 configmap:
-  create: true
+  create: false
   name: ""  # Optional, defaults to <release>-<chart>-config
   annotations: {}
   vars:
@@ -54,7 +54,7 @@ configmap:
 
 # Secret settings
 secret:
-  enabled: true
+  enabled: false
   name: ""  # Optional, defaults to <release>-<chart>-secret
   annotations: {}
   type: Opaque
@@ -71,7 +71,7 @@ secret:
 
 # Environment variables
 env:
-  enabled: true
+  enabled: false
   vars:
   - name: ENVIRONMENT
     value: "production"
@@ -85,7 +85,7 @@ env:
 
 # Liveness probe configuration
 livenessProbe:
-  enabled: true
+  enabled: false
   httpGet:
     path: /health
     port: 8080
@@ -97,7 +97,7 @@ livenessProbe:
 
 # Readiness probe configuration
 readinessProbe:
-  enabled: true
+  enabled: false
   httpGet:
     path: /ready
     port: 8080
@@ -109,7 +109,7 @@ readinessProbe:
 
 # Resource requirements
 resources:
-  enabled: true
+  enabled: false
   limits:
     cpu: "500m"
     memory: "512Mi"
@@ -119,7 +119,7 @@ resources:
 
 # Volume mounts and volumes
 volumeMounts:
-  create: true
+  create: false
   mountPoint:
     - name: config-volume
       mountPath: /etc/config
@@ -129,7 +129,7 @@ volumeMounts:
       readOnly: false
 
 volumes:
-  create: true
+  create: false
   mount:
     - name: config-volume
       configMap:
@@ -146,25 +146,20 @@ volumes:
         secretName: app-secrets
         defaultMode: 420
 
-# Pod security context
-podSecurityContext:
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
+podSecurityContext: {}
+  # runAsUser: 1000
+  # runAsGroup: 1000
+  # fsGroup: 1000
 
 # Container security context
-securityContext:
-  readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  allowPrivilegeEscalation: false
-  privileged: false
-  capabilities:
-    drop:
-      - ALL
+securityContext: {}
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # allowPrivilegeEscalation: false
 
 # Horizontal Pod Autoscaler
 hpa:
-  enabled: true
+  enabled: false
   name: ""  # Optional, defaults to <release>-<chart>-hpa
   annotations: {}
   minReplicas: 2
@@ -202,7 +197,7 @@ hpa:
 
 # Ingress configuration
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
   annotations:
     kubernetes.io/ingress.class: nginx
@@ -228,7 +223,7 @@ ingress:
 
 # Network policy configuration
 networkPolicy:
-  enabled: true
+  enabled: false
   name: ""  # Optional, defaults to <release>-<chart>-networkpolicy
   annotations: {}
   podSelector: {}  # Defaults to app's selector if not specified
@@ -261,7 +256,7 @@ networkPolicy:
 
 # Pod Disruption Budget
 pdb:
-  create: true
+  create: false
   name: ""  # Optional, defaults to <release>-<chart>-pdb
   annotations: {}
   minAvailable: 1  # Use either minAvailable or maxUnavailable
@@ -270,13 +265,134 @@ pdb:
 
 # Service Account
 serviceAccount:
-  create: true
+  create: false
   name: ""  # Optional, defaults to <release>-<chart>
   annotations:
     eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/my-role"
   automountServiceAccountToken: true
   imagePullSecrets:
     - registry-secret
+
+persistence:
+  # -- Enable persistence using Persistent Volume Claims
+  enabled: false
+  # -- Name of the PVC. Default is based on the release name
+  name: ""
+  # -- If defined, storageClassName: <storageClass>.
+  # If set to "-", storageClassName: "", which disables dynamic provisioning
+  # If undefined (the default) or set to null, no storageClassName is specified
+  storageClassName: ""
+  # -- If defined, uses an existing PVC instead of creating a new one
+  existingClaim: ""
+  # -- If defined, uses a specific PV
+  volumeName: ""
+  # -- Access modes for the PVC
+  accessModes:
+    - ReadWriteOnce
+  # -- Size of the PVC
+  size: "10Gi"
+  # -- VolumeMode for the PVC. Default is Filesystem
+  volumeMode: "Filesystem"
+  # -- Selector for the PVC
+  selector: {}
+    # matchLabels:
+    #   app: my-app
+  # -- Annotations for the PVC
+  annotations: {}
+  # -- Additional labels for the PVC
+  labels: {}
+  # -- Mount path where the volume will be mounted in the container
+  mountPath: "/data"
+  # -- Optional subPath for the volume mount
+  subPath: ""
+  
+  # -- PersistentVolume Configuration
+  persistentVolume:
+    # -- Whether to create a PersistentVolume
+    create: false
+    # -- Name of the PersistentVolume. Default is based on the PVC name with -pv suffix
+    name: ""
+    # -- StorageClass for the PV. Default is 'standard'
+    storageClassName: "standard"
+    # -- Reclaim policy for the PV
+    reclaimPolicy: "Retain"
+    # -- Volume mode for the PV. Default is Filesystem
+    volumeMode: "Filesystem"
+    # -- Additional labels for the PV
+    labels: {}
+    # -- Annotations for the PV
+    annotations: {}
+    
+    # -- HostPath specific configuration
+    hostPath:
+      # -- Path on the host
+      path: ""
+      # -- Type for the hostPath. Options: DirectoryOrCreate, Directory, FileOrCreate, File, Socket, CharDevice, BlockDevice
+      type: "DirectoryOrCreate"
+    
+    # -- NFS specific configuration
+    nfs:
+      # -- NFS server hostname or IP address
+      server: ""
+      # -- Path exported by the NFS server
+      path: ""
+    
+    # -- CSI volume specific configuration
+    csi:
+      # -- CSI driver name
+      driver: ""
+      # -- Volume handle for the CSI volume
+      volumeHandle: ""
+      # -- File system type for the CSI volume
+      fsType: "ext4"
+      # -- Additional volume attributes for the CSI driver
+      volumeAttributes: {}
+        # key: value
+      # -- Secrets for the CSI driver
+      controllerPublishSecretRef: {}
+        # name: secret-name
+        # namespace: secret-namespace
+    
+    # -- Local volume specific configuration
+    local:
+      # -- Path on the node for the local volume
+      path: ""
+      # -- Node affinity key for the local volume
+      nodeAffinityKey: "kubernetes.io/hostname"
+      # -- Node affinity value for the local volume
+      nodeAffinityValue: ""
+    
+    # -- AWS EBS specific configuration
+    awsElasticBlockStore:
+      # -- Volume ID of the AWS EBS volume
+      volumeID: ""
+      # -- File system type for the EBS volume
+      fsType: "ext4"
+    
+    # -- GCE Persistent Disk specific configuration
+    gcePersistentDisk:
+      # -- PD Disk name of the GCE persistent disk
+      pdName: ""
+      # -- File system type for the GCE persistent disk
+      fsType: "ext4"
+    
+    # -- Azure Disk specific configuration
+    azureDisk:
+      # -- Disk name of the Azure Disk
+      diskName: ""
+      # -- Disk URI of the Azure Disk
+      diskURI: ""
+      # -- Kind of the Azure Disk. Options: Shared, Dedicated, Managed
+      kind: "Managed"
+      # -- File system type for the Azure Disk
+      fsType: "ext4"
+    
+    # -- Azure File specific configuration
+    azureFile:
+      # -- Secret name that contains storage account name and key
+      secretName: ""
+      # -- Share name of the Azure File
+      shareName: ""
 
 # OpenShift Route
 route:
@@ -314,7 +430,7 @@ route:
 istio:
   # Istio Gateway
   gateway:
-    enabled: true
+    enabled: false
     name: ""  # Optional, defaults to <release>-<chart>-gateway
     annotations: {}
     selector:
@@ -345,7 +461,7 @@ istio:
 
   # Istio Virtual Service
   virtualService:
-    enabled: true
+    enabled: false
     name: ""  # Optional, defaults to <release>-<chart>-virtualservice
     annotations: {}
     hosts:
@@ -378,7 +494,7 @@ istio:
 
   # Istio Destination Rule
   destinationRule:
-    enabled: true
+    enabled: false
     name: ""  # Optional, defaults to <release>-<chart>-destinationrule
     annotations: {}
     host: ""  # Defaults to service name
@@ -411,7 +527,7 @@ istio:
 
   # Istio Peer Authentication
   peerAuthentication:
-    enabled: true
+    enabled: false
     name: ""  # Optional, defaults to <release>-<chart>-peerauth
     annotations: {}
     selector: {}  # Defaults to app's selector if not specified
@@ -423,7 +539,7 @@ istio:
 
   # Istio Authorization Policy
   authorizationPolicy:
-    enabled: true
+    enabled: false
     name: ""  # Optional, defaults to <release>-<chart>-authz
     annotations: {}
     selector: {}  # Defaults to app's selector if not specified
@@ -451,3 +567,37 @@ istio:
           - operation:
               methods: ["GET", "POST"]
               paths: ["/api/v1/*"]
+
+# Node selector, tolerations and affinity
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# RBAC Configuration
+rbac:
+  # -- Whether to create RBAC resources
+  create: false
+  # -- Type of RBAC resources. Valid values are "Role" or "ClusterRole"
+  type: "Role"
+  # -- Name of the role. If not specified, a name is generated using the release name
+  name: ""
+  # -- Annotations for the role
+  annotations: {}
+  # -- Rules for the role
+  rules: []
+  # - apiGroups: [""]
+  #   resources: ["pods", "pods/log"]
+  #   verbs: ["get", "list", "watch"]
+  # - apiGroups: ["apps"]
+  #   resources: ["deployments"]
+  #   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  
+  # -- Subjects to bind to the role
+  subjects: []
+  # - kind: ServiceAccount
+  #   name: default
+  #   namespace: default
+  # - kind: Group
+  #   name: system:masters
+  # - kind: User
+  #   name: admin
