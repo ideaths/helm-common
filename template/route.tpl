@@ -1,24 +1,29 @@
-# templates/common/route.tpl
+{{- define "common.route.tpl" -}}
 {{- if .Values.route.enabled }}
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: {{ include "yourchart.fullname" . }}
+  name: {{ include "common.fullname" . }}
   labels:
-    {{- include "yourchart.labels" . | nindent 4 }}
+    {{- include "common.labels" . | nindent 4 }}
+  {{- with .Values.route.annotations }}
   annotations:
-    {{- toYaml .Values.route.annotations | nindent 4 }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   host: {{ .Values.route.host }}
   to:
     kind: Service
-    name: {{ include "yourchart.fullname" . }}
+    name: {{ include "common.fullname" . }}
   port:
     targetPort: {{ .Values.service.targetPort }}
+  {{- with .Values.route.tls }}
   tls:
-    termination: {{ .Values.route.tls.termination }}
-    insecureEdgeTerminationPolicy: {{ .Values.route.tls.insecureEdgeTerminationPolicy }}
-    key: {{ .Values.route.tls.key | quote }}
-    certificate: {{ .Values.route.tls.certificate | quote }}
-    caCertificate: {{ .Values.route.tls.caCertificate | quote }}
+    termination: {{ .termination }}
+    insecureEdgeTerminationPolicy: {{ .insecureEdgeTerminationPolicy }}
+    key: {{ .key | quote }}
+    certificate: {{ .certificate | quote }}
+    caCertificate: {{ .caCertificate | quote }}
+  {{- end }}
 {{- end }}
+{{- end -}}
