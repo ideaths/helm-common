@@ -1,16 +1,15 @@
-# templates/common/networkPolicy.tpl
+{{- define "common.networkPolicy.tpl" -}}
 {{- if .Values.networkPolicy.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "yourchart.fullname" . }}-networkpolicy
+  name: {{ include "common.fullname" . }}-networkpolicy
   labels:
-    {{- include "yourchart.labels" . | nindent 4 }}
+    {{- include "common.labels" . | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "yourchart.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- include "common.selectorLabels" . | nindent 6 }}
   policyTypes:
     - Ingress
     - Egress
@@ -35,3 +34,4 @@ spec:
           port: {{ $.Values.service.port }}
     {{- end }}
 {{- end }}
+{{- end -}}
