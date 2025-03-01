@@ -45,10 +45,13 @@ spec:
               name: http
           
           # Environment Variables
-          {{- if .Values.env.enabled }}
-          env:
-            {{- toYaml .Values.env | nindent 12 }}
-          {{- end }}
+            {{- if .Values.env.enabled }}
+            env:
+            {{- range .Values.env.vars }}
+            - name: {{ .name }}
+                value: {{ .value | quote }}
+            {{- end }}
+            {{- end }}
           
           # Liveness Probe
           {{- if .Values.livenessProbe.enabled }}

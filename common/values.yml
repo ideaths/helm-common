@@ -72,6 +72,7 @@ secret:
 # Environment variables
 env:
   enabled: true
+  vars:
   - name: ENVIRONMENT
     value: "production"
   - name: LOG_LEVEL
