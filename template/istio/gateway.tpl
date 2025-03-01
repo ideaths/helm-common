@@ -1,11 +1,11 @@
-# templates/istio/gateway.tpl
+{{- define "common.istio.gateway.tpl" -}}
 {{- if .Values.istio.gateway.enabled }}
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: {{ include "yourchart.fullname" . }}-gateway
+  name: {{ include "common.fullname" . }}-gateway
   labels:
-    {{- include "yourchart.labels" . | nindent 4 }}
+    {{- include "common.labels" . | nindent 4 }}
 spec:
   selector:
     istio: {{ .Values.istio.gateway.selector }}
@@ -26,3 +26,4 @@ spec:
         mode: SIMPLE
         credentialName: {{ .Values.istio.gateway.credentialName }}
 {{- end }}
+{{- end -}}
