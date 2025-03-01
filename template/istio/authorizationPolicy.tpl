@@ -1,19 +1,19 @@
-# templates/istio/authorizationPolicy.tpl
+{{- define "common.istio.authorizationPolicy.tpl" -}}
 {{- if .Values.istio.authorizationPolicy.enabled }}
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: {{ include "yourchart.fullname" . }}-authz
+  name: {{ include "common.fullname" . }}-authz
   labels:
-    {{- include "yourchart.labels" . | nindent 4 }}
+    {{- include "common.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "yourchart.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- include "common.selectorLabels" . | nindent 6 }}
   rules:
     - from:
         - source:
             principals:
               - "{{ .Values.istio.authorizationPolicy.principal }}"
 {{- end }}
+{{- end -}}
