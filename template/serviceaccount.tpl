@@ -10,5 +10,14 @@ metadata:
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  {{- if .Values.serviceAccount.automountServiceAccountToken }}
+  automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+  {{- end }}
+{{- if .Values.serviceAccount.imagePullSecrets }}
+imagePullSecrets:
+  {{- range .Values.serviceAccount.imagePullSecrets }}
+  - name: {{ . }}
+  {{- end }}
+{{- end }}
 {{- end }}
 {{- end -}}

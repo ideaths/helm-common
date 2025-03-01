@@ -1,26 +1,65 @@
 {{- define "common.istio.destinationRule.tpl" -}}
 {{- if .Values.istio.destinationRule.enabled }}
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
-  name: {{ include "common.fullname" . }}-destinationrule
+  name: {{ .Values.istio.destinationRule.name | default (printf "%s-destinationrule" (include "common.fullname" .)) }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
+  {{- with .Values.istio.destinationRule.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  host: {{ include "common.fullname" . }}
+  host: {{ .Values.istio.destinationRule.host | default (include "common.fullname" .) }}
+  {{- if .Values.istio.destinationRule.exportTo }}
+  exportTo:
+    - {{ .Values.istio.destinationRule.exportTo }}
+  {{- end }}
+  {{- if .Values.istio.destinationRule.subsets }}
+  subsets:
+    {{- toYaml .Values.istio.destinationRule.subsets | nindent 4 }}
+  {{- end }}
+  {{- if .Values.istio.destinationRule.trafficPolicy }}
   trafficPolicy:
+    {{- if kindIs "string" .Values.istio.destinationRule.trafficPolicy }}
+    {{- toYaml (fromYaml .Values.istio.destinationRule.trafficPolicy) | nindent 4 }}
+    {{- else }}
+    {{- if .Values.istio.destinationRule.trafficPolicy.loadBalancer }}
     loadBalancer:
-      simple: ROUND_ROBIN
+      {{- toYaml .Values.istio.destinationRule.trafficPolicy.loadBalancer | nindent 6 }}
+    {{- else }}
+    loadBalancer:
+      simple: {{ .Values.istio.destinationRule.trafficPolicy.loadBalancerType | default "ROUND_ROBIN" }}
+    {{- end }}
+    
+    {{- if .Values.istio.destinationRule.trafficPolicy.connectionPool }}
     connectionPool:
+      {{- if .Values.istio.destinationRule.trafficPolicy.connectionPool.tcp }}
       tcp:
-        maxConnections: {{ .Values.istio.destinationRule.trafficPolicy.connectionPool.tcp.maxConnections }}
+        {{- toYaml .Values.istio.destinationRule.trafficPolicy.connectionPool.tcp | nindent 8 }}
+      {{- end }}
+      {{- if .Values.istio.destinationRule.trafficPolicy.connectionPool.http }}
       http:
-        http1MaxPendingRequests: {{ .Values.istio.destinationRule.trafficPolicy.connectionPool.http.http1MaxPendingRequests }}
-        http2MaxRequests: {{ .Values.istio.destinationRule.trafficPolicy.connectionPool.http.http2MaxRequests }}
+        {{- toYaml .Values.istio.destinationRule.trafficPolicy.connectionPool.http | nindent 8 }}
+      {{- end }}
+    {{- end }}
+    
+    {{- if .Values.istio.destinationRule.trafficPolicy.outlierDetection }}
     outlierDetection:
-      consecutive5xxErrors: {{ .Values.istio.destinationRule.trafficPolicy.outlierDetection.consecutive5xxErrors }}
-      interval: {{ .Values.istio.destinationRule.trafficPolicy.outlierDetection.interval }}
-      baseEjectionTime: {{ .Values.istio.destinationRule.trafficPolicy.outlierDetection.baseEjectionTime }}
-      maxEjectionPercent: {{ .Values.istio.destinationRule.trafficPolicy.outlierDetection.maxEjectionPercent }}
+      {{- toYaml .Values.istio.destinationRule.trafficPolicy.outlierDetection | nindent 6 }}
+    {{- end }}
+    
+    {{- if .Values.istio.destinationRule.trafficPolicy.tls }}
+    tls:
+      {{- toYaml .Values.istio.destinationRule.trafficPolicy.tls | nindent 6 }}
+    {{- end }}
+    
+    {{- if .Values.istio.destinationRule.trafficPolicy.portLevelSettings }}
+    portLevelSettings:
+      {{- toYaml .Values.istio.destinationRule.trafficPolicy.portLevelSettings | nindent 6 }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
 {{- end }}
 {{- end -}}

@@ -14,22 +14,59 @@ spec:
   {{- if .Values.ingress.className }}
   ingressClassName: {{ .Values.ingress.className }}
   {{- end }}
+  {{- if .Values.ingress.defaultBackend }}
+  defaultBackend:
+    {{- if .Values.ingress.defaultBackend.service }}
+    service:
+      name: {{ .Values.ingress.defaultBackend.service.name | default (include "common.fullname" .) }}
+      port:
+        number: {{ .Values.ingress.defaultBackend.service.port | default .Values.service.port }}
+    {{- end }}
+    {{- if .Values.ingress.defaultBackend.resource }}
+    resource:
+      apiGroup: {{ .Values.ingress.defaultBackend.resource.apiGroup }}
+      kind: {{ .Values.ingress.defaultBackend.resource.kind }}
+      name: {{ .Values.ingress.defaultBackend.resource.name }}
+    {{- end }}
+  {{- end }}
   rules:
     {{- range .Values.ingress.hosts }}
-    - host: {{ .host }}
+    - host: {{ .host | quote }}
       http:
         paths:
+          {{- if .paths }}
+          {{- range .paths }}
           - path: {{ .path }}
-            pathType: {{ .pathType }}
+            pathType: {{ .pathType | default "Prefix" }}
+            backend:
+              service:
+                name: {{ .serviceName | default (include "common.fullname" $) }}
+                port:
+                  {{- if .servicePort }}
+                  number: {{ .servicePort }}
+                  {{- else }}
+                  number: {{ $.Values.service.port }}
+                  {{- end }}
+          {{- end }}
+          {{- else }}
+          - path: {{ .path | default "/" }}
+            pathType: {{ .pathType | default "Prefix" }}
             backend:
               service:
                 name: {{ include "common.fullname" $ }}
                 port:
                   number: {{ $.Values.service.port }}
+          {{- end }}
     {{- end }}
-  {{- with .Values.ingress.tls }}
+  {{- if .Values.ingress.tls }}
   tls:
-    {{- toYaml . | nindent 4 }}
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- end -}}
