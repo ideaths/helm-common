@@ -1,9 +1,10 @@
+{{- define "common.service.tpl" -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "yourchart.fullname" . }}
+  name: {{ include "common.fullname" . }}
   labels:
-    {{- include "yourchart.labels" . | nindent 4 }}
+    {{- include "common.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,5 +13,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app.kubernetes.io/name: {{ include "yourchart.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- include "common.selectorLabels" . | nindent 4 }}
+{{- end -}}
