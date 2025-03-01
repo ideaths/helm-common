@@ -1,50 +1,51 @@
-
-# templates/common/deployment.tpl
+{{- define "common.deployment.tpl" -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "yourchart.fullname" . }}
+  name: {{ include "common.fullname" . }}
   labels:
-    {{- include "yourchart.labels" . | nindent 4 }}
+    {{- include "common.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "yourchart.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- include "common.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "yourchart.name" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        {{- toYaml .Values.podLabels | nindent 8 }}
+        {{- include "common.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       {{- if .Values.serviceAccount.create }}
-      serviceAccountName: {{ include "yourchart.serviceAccountName" . }}
+      serviceAccountName: {{ include "common.serviceAccountName" . }}
       {{- else if .Values.serviceAccount.name }}
       serviceAccountName: {{ .Values.serviceAccount.name }}
       {{- end }}
       
-      {{- if .Values.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.targetPort }}
               name: http
+          {{- if .Values.env.enabled }}
           env:
-            {{- if .Values.env.enabled }}
             {{- toYaml .Values.env | nindent 12 }}
-            {{- end }}
+          {{- end }}
+          {{- if and .Values.livenessProbe.enabled .Values.livenessProbe.httpGet }}
           livenessProbe:
-            {{- if and .Values.livenessProbe.enabled .Values.livenessProbe.httpGet }}
             httpGet:
               path: {{ .Values.livenessProbe.httpGet.path }}
               port: {{ .Values.livenessProbe.httpGet.port }}
@@ -52,9 +53,9 @@ spec:
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
             successThreshold: {{ .Values.livenessProbe.successThreshold }}
             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
-            {{- end }}
+          {{- end }}
+          {{- if and .Values.readinessProbe.enabled .Values.readinessProbe.httpGet }}
           readinessProbe:
-            {{- if and .Values.readinessProbe.enabled .Values.readinessProbe.httpGet }}
             httpGet:
               path: {{ .Values.readinessProbe.httpGet.path }}
               port: {{ .Values.readinessProbe.httpGet.port }}
@@ -62,20 +63,22 @@ spec:
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
             successThreshold: {{ .Values.readinessProbe.successThreshold }}
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
-            {{- end }}
+          {{- end }}
+          {{- if .Values.resources.enabled }}
           resources:
-            {{- if .Values.resources.enabled }}
             limits:
               cpu: "{{ .Values.resources.limits.cpu }}"
               memory: "{{ .Values.resources.limits.memory }}"
             requests:
               cpu: "{{ .Values.resources.requests.cpu }}"
               memory: "{{ .Values.resources.requests.memory }}"
-            {{- end }}
+          {{- end }}
+          {{- with .Values.securityContext }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.volumeMounts.create }}
           volumeMounts:
-            {{- if .Values.volumeMounts.create }}
             {{- range .Values.volumeMounts.mountPoint }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
@@ -86,19 +89,23 @@ spec:
               subPath: {{ .subPath }}
               {{- end }}
             {{- end }}
-            {{- end }}
-      {{- if or .Values.nodeSelector .Values.tolerations .Values.affinity }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.nodeSelector | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
       tolerations:
-        {{- toYaml .Values.tolerations | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
       affinity:
-        {{- toYaml .Values.affinity | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       
-      {{- if .Values.podSecurityContext }}
+      {{- with .Values.podSecurityContext }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       
       {{- if .Values.volumes.create }}
@@ -123,3 +130,4 @@ spec:
           {{- end }}
         {{- end }}
       {{- end }}
+{{- end -}}
