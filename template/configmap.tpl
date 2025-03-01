@@ -1,20 +1,15 @@
-{{- define "common.configmap.tpl" -}}
-{{- if and .Values.configmap.create .Values.configmap.serverConfigFiles }}
+{{- define "common.secret.tpl" -}}
+{{- if .Values.secret.enabled }}
 apiVersion: v1
-kind: ConfigMap
+kind: Secret
 metadata:
-  name: {{ include "common.fullname" . }}-config
+  name: {{ include "common.fullname" . }}-secret
   labels:
     {{- include "common.labels" . | nindent 4 }}
+type: Opaque
 data:
-  {{- range $key, $file := .Values.configmap.serverConfigFiles }}
-  {{ $key }}: |
-    {{- (.Files.Get $file) | nindent 4 }}
-  {{- end }}
-  {{- if .Values.configmap.vars }}
-  {{- range $key, $value := .Values.configmap.vars }}
-  {{ $key }}: "{{ $value }}"
-  {{- end }}
+  {{- range $key, $value := .Values.secret.data }}
+  {{ $key }}: {{ $value | b64enc }}
   {{- end }}
 {{- end }}
 {{- end -}}
