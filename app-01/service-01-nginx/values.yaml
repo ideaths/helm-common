@@ -1,199 +1,31 @@
-# Nginx-specific values
+# This is a minimal values.yaml that references the app-specific values repository
+# Values are imported from app-01-values repo based on environment and service
 
-replicaCount: 2
+# Reference configuration
+valueRepo:
+  # Application values repository
+  name: "values-app01" 
+  # Current service identifier
+  service: "service-01-nginx"
+
+# Default environment to use if not specified
+defaultEnv: "dev"
+
+# Import mechanism - automatically imports values from:
+# 1. values-app01/_common.yaml (common values for all services in this app)
+# 2. values-app01/service-01-nginx/values.yaml (service-specific values)
+# 3. values-app01/service-01-nginx/values-{environment}.yaml (environment-specific values)
+
+# Minimal configuration for local development/testing
+# These values will be overridden by imported values
+replicaCount: 1
 
 image:
   repository: nginx
   tag: "1.21.6"
   pullPolicy: IfNotPresent
 
-nameOverride: ""
-fullnameOverride: ""
-
-# Service configuration
+# Basic service configuration
 service:
   type: ClusterIP
   port: 80
-  targetPort: 80
-  annotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "80"
-
-# Ingress configuration
-ingress:
-  enabled: true
-  className: nginx
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-  hosts:
-    - host: nginx.local
-      paths:
-        - path: /
-          pathType: Prefix
-  tls: []
-
-# ConfigMap for Nginx configuration
-configmap:
-  create: true
-  name: "nginx-config"
-  data:
-    nginx.conf: |
-      user  nginx;
-      worker_processes  auto;
-      
-      error_log  /var/log/nginx/error.log notice;
-      pid        /var/run/nginx.pid;
-      
-      events {
-          worker_connections  1024;
-      }
-      
-      http {
-          include       /etc/nginx/mime.types;
-          default_type  application/octet-stream;
-          
-          log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-                            '$status $body_bytes_sent "$http_referer" '
-                            '"$http_user_agent" "$http_x_forwarded_for"';
-          
-          access_log  /var/log/nginx/access.log  main;
-          
-          sendfile        on;
-          keepalive_timeout  65;
-          
-          server {
-              listen       80;
-              server_name  localhost;
-              
-              location / {
-                  root   /usr/share/nginx/html;
-                  index  index.html index.htm;
-              }
-              
-              location /healthz {
-                  return 200 'OK';
-                  add_header Content-Type text/plain;
-              }
-              
-              error_page   500 502 503 504  /50x.html;
-              location = /50x.html {
-                  root   /usr/share/nginx/html;
-              }
-          }
-      }
-    index.html: |
-      <!DOCTYPE html>
-      <html>
-      <head>
-      <title>Welcome to Nginx deployed with Helm!</title>
-      <style>
-          body {
-              width: 35em;
-              margin: 0 auto;
-              font-family: Tahoma, Verdana, Arial, sans-serif;
-          }
-      </style>
-      </head>
-      <body>
-      <h1>Welcome to Nginx!</h1>
-      <p>If you see this page, the nginx web server is successfully installed and
-      working using a custom Helm chart with the helm-common library.</p>
-      </body>
-      </html>
-
-# Volume mounts configuration for Nginx
-volumeMounts:
-  create: true
-  mountPoint:
-    - name: config-volume
-      mountPath: /etc/nginx/nginx.conf
-      subPath: nginx.conf
-      readOnly: true
-    - name: html-volume
-      mountPath: /usr/share/nginx/html/index.html
-      subPath: index.html
-      readOnly: true
-    - name: tmp-volume
-      mountPath: /tmp
-      readOnly: false
-
-# Volumes for Nginx
-volumes:
-  create: true
-  mount:
-    - name: config-volume
-      configMap:
-        name: nginx-config
-        items:
-          - key: nginx.conf
-            path: nginx.conf
-    - name: html-volume
-      configMap:
-        name: nginx-config
-        items:
-          - key: index.html
-            path: index.html
-    - name: tmp-volume
-      emptyDir: {}
-
-# Resource constraints
-resources:
-  enabled: true
-  limits:
-    cpu: "200m"
-    memory: "256Mi"
-  requests:
-    cpu: "100m"
-    memory: "128Mi"
-
-# Liveness probe configuration
-livenessProbe:
-  enabled: true
-  httpGet:
-    path: /healthz
-    port: 80
-  initialDelaySeconds: 15
-  periodSeconds: 10
-  timeoutSeconds: 5
-  successThreshold: 1
-  failureThreshold: 3
-
-# Readiness probe configuration
-readinessProbe:
-  enabled: true
-  httpGet:
-    path: /healthz
-    port: 80
-  initialDelaySeconds: 5
-  periodSeconds: 5
-  timeoutSeconds: 3
-  successThreshold: 1
-  failureThreshold: 3
-
-# Pod security
-podSecurityContext:
-  fsGroup: 101
-  runAsNonRoot: true
-  runAsUser: 101
-  runAsGroup: 101
-
-# Container security
-securityContext:
-  capabilities:
-    drop:
-      - ALL
-  readOnlyRootFilesystem: true
-  allowPrivilegeEscalation: false
-
-# Horizontal Pod Autoscaler
-hpa:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 5
-  targetCPUUtilizationPercentage: 80
-
-# Pod Disruption Budget
-pdb:
-  create: true
-  minAvailable: 1
