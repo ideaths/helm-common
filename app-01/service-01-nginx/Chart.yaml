@@ -1,0 +1,10 @@
+apiVersion: v2
+name: nginx
+description: A Helm chart for Nginx deployment using helm-common library
+type: application
+version: 0.1.0
+appVersion: "1.21.6"
+dependencies:
+  - name: common
+    version: 0.1.0
+    repository: "file://../common"
