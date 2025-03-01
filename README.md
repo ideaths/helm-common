@@ -1,70 +1,98 @@
-# Kubernetes Helm Chart with Common Templates
+# Kubernetes Helm Chart Collection with Common Templates
 
-This repository contains a collection of Kubernetes Helm charts that use a common template library for deploying applications consistently across environments.
+This repository contains a collection of Kubernetes Helm charts that use a common template library for deploying applications consistently across environments. The repository is structured by applications, with each application containing multiple services.
 
 ## Repository Structure
 
 ```
-├── common/                          # Common template library chart
-│   ├── templates/                   # Reusable templates
-│   │   ├── _helpers.tpl             # Helper functions
-│   │   ├── configmap.tpl            # ConfigMap template
-│   │   ├── deployment.tpl           # Deployment template
-│   │   ├── hpa.tpl                  # HorizontalPodAutoscaler template
-│   │   ├── ingress.tpl              # Ingress template
-│   │   ├── networkPolicy.tpl        # NetworkPolicy template
-│   │   ├── pdb.tpl                  # PodDisruptionBudget template
-│   │   ├── pv.tpl                   # PersistentVolume template
-│   │   ├── pvc.tpl                  # PersistentVolumeClaim template
-│   │   ├── role.tpl                 # Role template
-│   │   ├── rolebinding.tpl          # RoleBinding template
-│   │   ├── secret.tpl               # Secret template
-│   │   ├── service.tpl              # Service template
-│   │   ├── serviceaccount.tpl       # ServiceAccount template
-│   │   ├── istio/                   # Istio-specific templates
+helm-charts/
+├── deploy.sh                      # Main deployment script
+│
+├── common/                        # Common template library chart
+│   ├── templates/                 # Reusable templates
+│   │   ├── _helpers.tpl           # Helper functions
+│   │   ├── configmap.tpl          # ConfigMap template
+│   │   ├── deployment.tpl         # Deployment template
+│   │   ├── hpa.tpl                # HorizontalPodAutoscaler template
+│   │   ├── ingress.tpl            # Ingress template
+│   │   ├── networkPolicy.tpl      # NetworkPolicy template
+│   │   ├── pdb.tpl                # PodDisruptionBudget template
+│   │   ├── pv.tpl                 # PersistentVolume template
+│   │   ├── pvc.tpl                # PersistentVolumeClaim template
+│   │   ├── role.tpl               # Role template
+│   │   ├── rolebinding.tpl        # RoleBinding template
+│   │   ├── secret.tpl             # Secret template
+│   │   ├── service.tpl            # Service template
+│   │   ├── serviceaccount.tpl     # ServiceAccount template
+│   │   ├── istio/                 # Istio-specific templates
 │   │   │   ├── authorizationPolicy.tpl
 │   │   │   ├── destinationRule.tpl
 │   │   │   ├── gateway.tpl
 │   │   │   ├── peerAuthentication.tpl
 │   │   │   └── virtualService.tpl
-│   ├── Chart.yaml                   # Chart metadata
-│   └── values.yaml                  # Default values (for reference)
+│   ├── Chart.yaml                 # Chart metadata
+│   └── values.yaml                # Default values (for reference)
 │
-├── app-01/                          # Application directory
-│   ├── service-01-nginx/            # Nginx service chart
-│   │   ├── templates/               # Service-specific templates that include common templates
-│   │   │   ├── configmap.yaml       # Includes common.configmap.tpl
-│   │   │   ├── deployment.yaml      # Includes common.deployment.tpl
-│   │   │   ├── hpa.yaml             # Includes common.hpa.tpl
-│   │   │   ├── ingress.yaml         # Includes common.ingress.tpl
-│   │   │   ├── networkpolicy.yaml   # Includes common.networkPolicy.tpl
-│   │   │   ├── pdb.yaml             # Includes common.pdb.tpl
-│   │   │   └── service.yaml         # Includes common.service.tpl
-│   │   ├── Chart.yaml               # Chart metadata with common dependency
-│   │   └── values.yaml              # Minimal values with reference to values repository
+├── app-01/                        # First application directory
+│   ├── service-01-nginx/          # Nginx service chart
+│   │   ├── templates/             # Service-specific templates
+│   │   │   ├── configmap.yaml     # Includes common.configmap.tpl
+│   │   │   ├── deployment.yaml    # Includes common.deployment.tpl
+│   │   │   ├── hpa.yaml           # Includes common.hpa.tpl
+│   │   │   ├── ingress.yaml       # Includes common.ingress.tpl
+│   │   │   ├── networkpolicy.yaml # Includes common.networkPolicy.tpl
+│   │   │   ├── pdb.yaml           # Includes common.pdb.tpl
+│   │   │   └── service.yaml       # Includes common.service.tpl
+│   │   ├── Chart.yaml             # Chart metadata with common dependency
+│   │   └── values.yaml            # Minimal values with reference to values repository
+│   │
+│   └── service-02-api/            # API service chart
+│       ├── templates/             # Service-specific templates
+│       ├── Chart.yaml             # Chart metadata
+│       └── values.yaml            # Minimal values file
+│
+└── app-02/                        # Second application directory
+    ├── service-01-frontend/       # Frontend service chart
+    │   ├── templates/             # Service-specific templates
+    │   ├── Chart.yaml             # Chart metadata
+    │   └── values.yaml            # Minimal values file
+    │
+    └── service-02-backend/        # Backend service chart
+        ├── templates/             # Service-specific templates
+        ├── Chart.yaml             # Chart metadata
+        └── values.yaml            # Minimal values file
 ```
 
 ## Values Repository Structure
 
-Each application has its own values repository that contains environment-specific configurations:
+Each application has its own values repository, named after the application (e.g., `app-01-values`). The values repositories should be cloned alongside this repository:
 
 ```
-app-01-values/
-│
-├── _common.yaml              # Common values for all services in app-01
-│
-├── service-01-nginx/
-│   ├── values.yaml           # Base configuration for nginx service
-│   ├── values-dev.yaml       # Development environment overrides
-│   ├── values-uat.yaml       # UAT environment overrides
-│   ├── values-prod.yaml      # Production environment overrides
-│   └── files/                # Service-specific files directory
-│       ├── nginx.conf        # Nginx configuration
-│       └── index.html        # HTML template
+parent-directory/
+├── helm-charts/                   # This repository
+└── app-01-values/                 # Values for app-01
+    ├── _common.yaml               # Common values for all services in app-01
+    │
+    ├── service-01-nginx/
+    │   ├── values.yaml            # Base configuration for nginx service
+    │   ├── values-dev.yaml        # Development environment overrides
+    │   ├── values-uat.yaml        # UAT environment overrides
+    │   ├── values-prod.yaml       # Production environment overrides
+    │   └── files/                 # Service-specific files directory
+    │       ├── nginx.conf         # Nginx configuration
+    │       └── index.html         # HTML template
+    │
+    └── service-02-api/            # Another service's values
+        ├── values.yaml
+        ├── values-dev.yaml
+        ├── values-uat.yaml
+        ├── values-prod.yaml
+        └── files/
 ```
 
 ## Features
 
+- **Multi-Application Support**: Organize multiple applications within a single repository
 - **Reusable Templates**: Standardized templates for all Kubernetes resources
 - **Environment-Specific Configuration**: Separate values files for different environments
 - **Common Library Approach**: Single source of truth for resource definitions
@@ -79,39 +107,62 @@ app-01-values/
 - Helm 3.8+
 - Access to your application's values repository
 
-### Installing the Common Chart
-
-The common chart is installed as a dependency of each service chart. You don't need to install it separately.
-
-### Deploying a Service
+### Repository Setup
 
 1. Clone both the chart repository and your application's values repository:
 
 ```bash
+# Create a parent directory for related repositories
+mkdir my-k8s-apps && cd my-k8s-apps
+
 # Clone chart repository
 git clone https://github.com/example/helm-charts.git
 cd helm-charts
 
-# Clone application values repository (in a separate directory)
+# Clone application values repositories in the parent directory
 git clone https://github.com/example/app-01-values.git ../app-01-values
+git clone https://github.com/example/app-02-values.git ../app-02-values
 ```
 
-2. Deploy a service using the provided deployment script:
+### Deploying a Service
+
+The easiest way to deploy a service is using the provided `deploy.sh` script:
 
 ```bash
-# Deploy nginx service to UAT environment
-./deploy.sh service-01-nginx uat app-01-namespace nginx-uat
+# Basic usage
+./deploy.sh <app-id> <service-name> [environment] [namespace] [release-name]
 ```
 
-Or manually using Helm:
+By default:
+- `namespace` defaults to the app-id
+- `release-name` defaults to the service name
+- `environment` defaults to "dev" if not specified
+
+#### Examples:
+
+```bash
+# Deploy nginx from app-01 to production
+# Will deploy to namespace "app-01" with release name "service-01-nginx"
+./deploy.sh app-01 service-01-nginx prod
+
+# Deploy with custom namespace but default release name
+./deploy.sh app-01 service-01-nginx uat custom-namespace
+
+# Deploy with custom namespace and release name
+./deploy.sh app-02 service-01-frontend prod frontend-ns frontend-prod
+```
+
+#### Manual Deployment:
+
+You can also deploy manually using Helm:
 
 ```bash
 # Deploy manually by referencing values files
-helm upgrade --install nginx-uat ./app-01/service-01-nginx \
+helm upgrade --install service-01-nginx ./app-01/service-01-nginx \
   -f ../app-01-values/_common.yaml \
   -f ../app-01-values/service-01-nginx/values.yaml \
   -f ../app-01-values/service-01-nginx/values-uat.yaml \
-  --namespace app-01-namespace \
+  --namespace app-01 \
   --create-namespace
 ```
 
@@ -168,7 +219,7 @@ This creates a Deployment resource based on the values provided in your values f
 
 ## Additional Resources
 
-The `files` directory in the values repository can contain service-specific files like configuration files, HTML templates, etc. These can be referenced in your values files and mounted as ConfigMaps.
+The `files` directory in the values repository can contain service-specific files like configuration files, HTML templates, etc. These will be automatically copied to the service chart directory when deploying using `deploy.sh`.
 
 ## Customizing Templates
 
@@ -176,6 +227,14 @@ If a service needs to customize a common template, it can:
 1. Include the common template and add additional resources
 2. Create a custom template that extends the common one
 3. Override specific values in the values files
+
+## GitHub Actions Integration
+
+For CI/CD integration with GitHub Actions, you can use:
+
+1. **Composite Actions** - Create reusable deployment actions
+2. **Reusable Workflows** - Define standard deployment workflows
+3. **Organizational Actions** - Share actions across multiple repositories
 
 ## Troubleshooting
 
@@ -190,7 +249,7 @@ If a service needs to customize a common template, it can:
 To see the rendered templates without deploying:
 
 ```bash
-helm template nginx-uat ./app-01/service-01-nginx \
+helm template service-01-nginx ./app-01/service-01-nginx \
   -f ../app-01-values/_common.yaml \
   -f ../app-01-values/service-01-nginx/values.yaml \
   -f ../app-01-values/service-01-nginx/values-uat.yaml
